@@ -20,7 +20,7 @@
 
 import os
 import json
-from utilities import clear, get_full_name, search
+from utilities import clear, get_full_name, search, location
 
 
 def welcome():
@@ -87,7 +87,7 @@ def menu_1_1_2():
         print("Ученики '%s' класса: " % class_room)
         for number, student in enumerate(search(students_data, class_room=class_room)):
             # FIXME(Complete): учесть(во всей программе), в файле могут быть ученики из других школ
-            print("     %s)%s" % (number, get_full_name(student)))
+            print("     %s)%s" % (number+1, get_full_name(student)))
             # TODO(complete): Добавить нумерацию учеников для каждого класса
     print('Ожидают принятия в школу:')
     for number, student in enumerate(search(students_data, class_room='')):
@@ -108,7 +108,7 @@ def menu_1_1_3():
     for class_room in school_data["classes"]:
         print("Учителя, преподающие в '%s' классе: " % class_room)
         for number, teacher in enumerate(search(teachers_data, class_room=class_room)):
-            print("     %s)%s" % (number, get_full_name(teacher)))
+            print("     %s)%s" % (number+1, get_full_name(teacher)))
         print("-" * 24)
     _choice = '1'
     while _choice:
@@ -166,27 +166,30 @@ def menu_1_2_2():
     welcome()
     print("     MENU > Редактировать > Ученика")
     for num, student in enumerate(students_data):
-        print("%s) %s || %s" % (num, get_full_name(student), student['class']))
-    student_num = input('Укажите номер ученика(или НОЛЬ, для создания нового): ')
+        print("%s) %s || %s" % (num+1, get_full_name(student), student['class']))
+    student_num = int(input('Укажите номер ученика(или НОЛЬ, для создания нового): '))-1
     print()
-    print("Вы выбрали %s " % 'unknown')  # TODO: Указать выбранного ученика и отобразить по нему полную информацию
-    # FIXME: не забыть обработать ввод номера несуществующего ученика
-    print('1. Удалить ученика')
-    print('2. Перевести в другой класс')
-    print('3. Назад')
-    # TODO: реализовать удаление и перевод ученика
+    if student_num != 0:
+        print("Вы выбрали %s " % get_full_name(students_data[student_num]))
+        print('ID: %s\nКласс: %s\nДата рождения: %s' % (students_data[student_num]['id'], students_data[student_num]['class'], students_data[student_num]['birth_day']))
+        # TODO: Указать выбранного ученика и отобразить по нему полную информацию
+        # FIXME: не забыть обработать ввод номера несуществующего ученика
+        print('1. Удалить ученика')
+        print('2. Перевести в другой класс')
+        print('3. Назад')
+        # TODO: реализовать удаление и перевод ученика
     # TODO*: реализовать создание нового ученика с вводом всех необходимых параметров
     # TODO: не забыть, нельзя задать ученику несуществующий класс
 
 # Load data
-with open('C:/Users/CrownedSilverFox/PycharmProjects/Project_School/data/school.json', encoding='utf-8') as f:
+with open(location('data/school.json'), encoding='utf-8') as f:
     school_data = json.load(f)
 
-with open('C:/Users/CrownedSilverFox/PycharmProjects/Project_School/data/Students.json', encoding='utf-8') as f:
+with open(location('data/Students.json'), encoding='utf-8') as f:
     students_data = json.load(f)
 students_data = [student for student in students_data if student['school'] == '67 школа']
 
-with open('C:/Users/CrownedSilverFox/PycharmProjects/Project_School/data/Teachers.json', encoding='utf-8') as f:
+with open(location('data/Teachers.json'), encoding='utf-8') as f:
     teachers_data = json.load(f)
 teachers_data = [teacher for teacher in teachers_data if teacher['school'] == '67 школа']
 
