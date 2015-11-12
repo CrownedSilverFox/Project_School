@@ -18,129 +18,91 @@
 # 2. Сделайте функцию обертку, для удобного вывода цветного текста
 # 3. Разукрасьте текст программы, сделав его удобнее для восприятия
 
-import os
 import json
-from utilities import clear, get_full_name, search, location
+from utilities import search, get_full_name, location, clear, save
+
+school_data = []
+students_data = []
 
 
-def welcome():
-    print("*" * 24)
-    print("* Welcome to %s %s *" % (school_data['number'], school_data['type']))
-    print("*" * 24)
+def load_data():
+    global school_data
+    global students_data
+    global teachers_data
+
+    with open(location('data/school.json'), encoding='utf-8') as f:
+        school_data = json.load(f)
+
+    with open(location('data/Students.json'), encoding='utf-8') as f:
+        students_data = json.load(f)
+
+    with open(location('data/Teachers.json'), encoding='utf-8') as f:
+        teachers_data = json.load(f)
 
 
-def menu_1():
-    welcome()
-    print("     MENU")
-    print("1. Информация")
-    print("2. Редактировать")
-    print("3. Выйти")
-
-
-def menu_1_1():
-    welcome()
-    print("     MENU > Информация")
-    print("1. О классах")
-    print("2. Об учениках")
-    print("3. Об учителях")
-    print("4. Назад")
-
-
-def menu_1_1_1():
-    global choice
-    welcome()
-    print("     MENU > Информация > О классах")
-    print("Все классы нашей школы")
-    print("||", " || ".join(school_data['classes']), "||", '\n')
+def menu_do(menu_x, **kwargs):
     while True:
-        class_room = input("Введите класс, для подробной информации по нему или Enter для возврата\n:")
-        if not class_room:
-            choice = 'menu_1_1()'
-            menu_1_1()
-            return
-        if class_room in school_data["classes"]:  # FIXME(complete): сообщить, если выбран несуществующий класс
-            print("\nИнформация по %s классу:" % class_room)
-            # TODO(complete): вывести всех учеников и учителей указанного класса
-            print("     Учителя: ...")
-            for teacher in teachers_data:
-                if teacher['class'] == class_room:
-                    print('*' * 50)
-                    print('* %s %s %s *' % (teacher['surname'], teacher['name'], teacher['middle_name']))
-                    print('*' * 50)
-            print("     Ученики: ...")
-            for student in students_data:
-                if student['class'] == class_room:
-                    print('*' * 50)
-                    print("     ", get_full_name(student))
-                    print('*' * 50)
-            # TODO*(complete): Сделать возврат в предыдущее меню(во всех местах программы).
-            # TODO(complete):Выход из программы только по пункту "выйти"
+        clear()
+        print("*" * 24)
+        print("* Welcome to %s %s *" % (school_data['number'], school_data['type']))
+        print("*" * 24)
+        print("MENU > ", kwargs.get("sub_menu", ''))
+        for number, el in enumerate(menu_x, start=1):
+            print("%s. %s" % (number, el["text"]))
+        choice = input(": ")
+        if not choice:
+            if menu != menu_x:
+                return
+            else:
+                print('Если вы случайно нажали Enter, то нажмите 1')
+                choice = input('Для выхода нажмите 2\n:')
+                if choice == '1':
+                    continue
+                elif choice == '2':
+                    end()
+                    return
+        menu_select = menu_x[int(choice-1)]
+        if menu_select.get("do"):
+            if menu_select["do"]():
+                return
         else:
-            print('Выбран несуществующий класс')
+            menu_do(menu_select["sub_menu"], sub_menu=menu_select['text'])
 
 
-def menu_1_1_2():
-    welcome()
-    print("     MENU > Информация > Об учениках")
-    print("-" * 24)
+def about_students():
     for class_room in school_data["classes"]:
         print("Ученики '%s' класса: " % class_room)
-        for number, student in enumerate(search(students_data, class_room=class_room)):
+        for number, student in enumerate(search(students_data, class_room=class_room), start=1):
             # FIXME(Complete): учесть(во всей программе), в файле могут быть ученики из других школ
-            print("     %s)%s" % (number+1, get_full_name(student)))
+            print("     %s)%s" % (number, get_full_name(student)))
             # TODO(complete): Добавить нумерацию учеников для каждого класса
     print('Ожидают принятия в школу:')
-    for number, student in enumerate(search(students_data, class_room='')):
+    for number, student in enumerate(search(students_data, class_room='X'), start=1):
         print("     %s)%s" % (number, get_full_name(student)))
     print("-" * 24)
-    _choice = '1'
-    while _choice:
-        _choice = input("Нажмите Enter для возврата в предыдущее меню")
-    global choice
-    choice = 'menu_1_1()'
-    menu_1_1()
+    input("Нажмите Enter для возврата в предыдущее меню\n:")
 
 
-def menu_1_1_3():
-    welcome()
-    print("     MENU > Информация > Об учителях")
-    print("-" * 24)
+def about_classes():
+    print("Все классы нашей школы")
+    print("||", " || ".join(school_data['classes']), "||\n")
+    input("Нажмите Enter для возврата в предыдущее меню\n:")
+
+
+def about_teachers():
     for class_room in school_data["classes"]:
         print("Учителя, преподающие в '%s' классе: " % class_room)
         for number, teacher in enumerate(search(teachers_data, class_room=class_room)):
             print("     %s)%s" % (number+1, get_full_name(teacher)))
         print("-" * 24)
-    _choice = '1'
-    while _choice:
-        _choice = input("Нажмите Enter для возврата в предыдущее меню")
-    global choice
-    choice = 'menu_1_1()'
-    menu_1_1()
+    input("Нажмите Enter для возврата в предыдущее меню\n:")
 
 
-def menu_1_2():
-    print("     MENU > Редактировать")
-    print("1. Класс")
-    print("2. Ученика")
-    print("3. Учителя")
-
-
-def menu_1_2_1():
-    print("     MENU > Редактировать > Класс")
-    print("     Классы: ")
-    print("     ||", " || ".join(school_data['classes']), "||")
-    print()
-    print("1. Удалить существующий")
-    print("2. Создать новый")
-    print("3. Назад")  # TODO(completed): Реализовать ВСЕ(во всей программе) пункты 'назад'
-
-
-def menu_1_2_1_1():
+def delete_class():
     global school_data
     global students_data
     global teachers_data
-    global choice
-    class_room = input("Введите класс: ")
+    class_room = input("Введите класс\n:")
     while True:
         if class_room in school_data["classes"]:
             # TODO(complete): 1. Удалить класс из school.json
@@ -150,47 +112,37 @@ def menu_1_2_1_1():
             # TODO(complete):3 Заменить класс у всех учеников на '' (считается что ученик ожидает перевод в новый класс)
             for i, student in enumerate(students_data):
                 if student['class'] == class_room:
-                    students_data[i]['class'] = ''
-            for i, teacher in enumerate(teachers_data):
-                if class_room in teacher['class']:
-                    teachers_data[i]['class'].remove(class_room)
-            choice = 'menu_1_2'
-            menu_1_2()
+                    students_data[i]['class'] = 'X'
             # TODO(complete): 4. Не забыть обновить информацию в файлах
             # TODO(complete):5 Сделать изменения в меню 'MENU > Информация > Об учениках' (вывести учеников без классов)
+            save_all()
+            input('Класс успешно удалён, нажмите Enter для возврата в предыдущее меню\n:')
             break
         else:
             print('Вы ввели несуществующий класс')
             # TODO(complete): и предложить ввести класс повторно
             class_room = input('Введите корректный класс или нажмите Enter для возврата в пердыдущее меню\n:')
             if not class_room:
-                choice = 'menu_1_2_1()'
-                menu_1_2_1()
                 return
 
 
-def menu_1_2_1_1():
+def create_class():
     global school_data
-    global choice
     class_room = input("Введите класс или Enter для возврата в предыдущее меню\n:")
     if class_room:
         school_data['classes'].append(class_room)
+        save(school_data, 'school.json')
+        input('Класс успешно создан, нажмите Enter для возврата в предыдущее меню\n:')
     else:
-        choice = 'menu_1_2'
-        menu_1_2()
+        return
 
 
-def menu_1_2_2():
-    welcome()
-    print("     MENU > Редактировать > Ученика")
+def edit_create_student():
     for num, student in enumerate(students_data):
         print("%s) %s || %s" % (num+1, get_full_name(student), student['class']))
     student_num = (input('Укажите номер ученика(или НОЛЬ, для создания нового)\nНажмите Enter для возврата в предыдущее'
                          ' меню\n:'))
     if not student_num:
-        global choice
-        choice = 'menu_1_2()'
-        menu_1_2()
         return
     student_num = int(student_num)-1
     if student_num != -1:
@@ -212,8 +164,6 @@ def menu_1_2_2():
             while not (class_room in school_data['classes']):
                 class_room = input('Введите корректный класс или нажмите Enter для возврата в пердыдущее меню\n:')
                 if not class_room:
-                    choice = 'menu_1_2()'
-                    menu_1_2()
                     return
             students_data[student_num]['class'] = class_room
         # TODO(complete): реализовать удаление и перевод ученика
@@ -227,24 +177,11 @@ def menu_1_2_2():
         while not (class_room in school_data['classes']):
             class_room = input('Введите корректный класс или нажмите Enter для возврата в пердыдущее меню\n:')
             if not class_room:
-                choice = 'menu_1_2()'
-                menu_1_2()
                 return
         birth_day = input('Введите дату рождения в формате ДД.ММ.ГГГГ\n:')
         std_id = students_data[-1]['id']+1
         students_data.append({'name': std_name[1], 'surname': std_name[0], 'middle_name': std_name[2],
-                              'class': class_room, 'birth_day': birth_day, 'id': std_id})
-        global choice
-        choice = 'menu_1_2()'
-        menu_1_2()
-        return
-
-
-def menu_1_2_3():
-    welcome()
-    print("     MENU > Редактировать > Учителя")
-    print("Данный пункт находится в разработке")
-    print('*' * 100)
+                              'class': class_room, 'birth_day': birth_day, 'id': std_id, 'school': '67 школа'})
 
 
 def delete_human(human_id, human_race='students'):
@@ -255,56 +192,88 @@ def delete_human(human_id, human_race='students'):
         global teachers_data
         teachers_data = [human for human in teachers_data if human_id != human['id']]
 
-# Load data
-with open(location('data/school.json'), encoding='utf-8') as f:
-    school_data = json.load(f)
 
-with open(location('data/Students.json'), encoding='utf-8') as f:
-    students_data = json.load(f)
-students_data = [student for student in students_data if student['school'] == '67 школа']
+def edit_teacher():
+    input('Функция в разработке. Нажмите Enter для возврата в предыдущее меню\n:')
 
-with open(location('data/Teachers.json'), encoding='utf-8') as f:
-    teachers_data = json.load(f)
-teachers_data = [teacher for teacher in teachers_data if teacher['school'] == '67 школа']
 
-# MAIN
+def end():
+    global run
+    print("Goodbye")
+    run = False
+    return True
 
-menu_back_dict = {'menu_1()': '3', 'menu_1_1()': '4', 'menu_1_2_1()': '3', 'menu_1_2_2()': '3'}
-selected_num = -2
 
-clear()
-# Про цветной текст ищите в гугле
-print("\033[1;34m*\033[1;m" * 24)
-print("\033[1;34m* Welcome to %s %s *\033[1;m" % (school_data['number'], school_data['type']))
-print("\033[1;34m*\033[1;m" * 24)
-choice = 'menu_1()'
-while True:
-    print('———————————', choice, '———————————')
-    clear()
-    if menu_back_dict.get(choice[:-4]+'()') == choice[-3]:
-        if choice == 'menu_1_3':
-            print('Goodbye')
-            break
-        choice = choice[:-6]+'()'
-    try:
-        eval(choice)
-    except NameError:
-            print('Действие невозможно. Такого пункта нет или вы нажали Enter в корневом меню. Возврат в корневое меню')
-            choice = 'menu_1()'
-            menu_1()
-    if choice != 'menu_1()':
-        choice_1 = input('Нажмите Enter для возврата в предыдущее меню\n:')
-    else:
-        choice_1 = input(':')
-    if choice_1:
-        choice = choice[:-2]+'_'+choice_1+'()'
-    else:
-        choice = choice[:-4]+'()'
-with open(location('data/school.json'), 'w', encoding='utf-8') as f:
-    f.write(json.dumps(school_data))
+def save_all():
+    save(students_data, 'Students.json')
+    save(teachers_data, 'Teachers.json')
+    save(school_data, 'school.json')
 
-with open(location('data/Students.json'), 'w', encoding='utf-8') as f:
-    f.write(json.dumps(students_data))
 
-with open(location('data/Teachers.json'), 'w', encoding='utf-8') as f:
-    f.write(json.dumps(teachers_data))
+load_data()
+
+menu = [
+    {
+        "text": "Информация",
+        "sub_menu": [
+            {
+                "text": "О классах",
+                "do": about_classes
+            },
+            {
+                "text": "Об учениках",
+                "do": about_students,
+            },
+            {
+                'text': 'Об учителях',
+                'do': about_teachers
+            },
+            {
+                "text": "Назад",
+                "do": lambda: True
+            }
+        ]
+    },
+    {
+        "text": "Редактировать",
+        'sub_menu': [
+            {
+                'text': 'Редактировать класс',
+                'sub_menu': [
+                    {
+                        'text': 'Удалить класс',
+                        'do': delete_class
+                    },
+                    {
+                        'text': 'Создать класс',
+                        'do': create_class
+                    },
+                    {
+                        "text": "Назад",
+                        "do": lambda: True
+                    }
+                ]
+            },
+            {
+                'text': 'Редактировать Ученика',
+                'do': edit_create_student
+            },
+            {
+                'text': 'Редактировать Учителя',
+                'do': edit_teacher
+            },
+            {
+                "text": "Назад",
+                "do": lambda: True
+            }
+        ]
+    },
+    {
+        "text": "Выход",
+        "do": end
+    }
+]
+
+run = True
+
+menu_do(menu)

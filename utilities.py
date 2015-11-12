@@ -1,8 +1,10 @@
 import math
 import os
+import json
 
 location = lambda x: os.path.join(
     os.path.dirname(os.path.realpath(__file__)), x)
+DIR = 'data'
 
 
 def clear():
@@ -73,6 +75,19 @@ def print_table(data, num_columns=1, num_sep=10, sort=False, dir_output='line'):
         else:
             if line:
                 print(line)
+
+
+def save(data, file_name):
+    """
+    Сохраняем данные(data) в файл с именем file_name в формате JSON
+    :param data: сохраняемые данные
+    :type data: any type
+    :param file_name: имя файла
+    :type file_name: str
+    """
+    file = open(os.path.join(DIR, file_name), 'w', encoding="UTF-8")
+    file.write(json.dumps(data, ensure_ascii=False))
+    file.close()
 
 
 if __name__ == "__main__":
